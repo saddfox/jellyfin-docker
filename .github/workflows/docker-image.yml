@@ -21,6 +21,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: saddfox/jellyfin-docker:stable
+          tags: saddfox/jellyfin-docker:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
