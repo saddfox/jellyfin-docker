@@ -1,7 +1,7 @@
 # By default build for unstable, 10.8.0-beta2 doesn't work on ubuntu 22.04
 # supports amd vaapi, opencl only for legacy/orca
 # for intel/nvidia use official jellyfin/jellyfin image
-ARG TARGET_RELEASE=stable
+ARG TARGET_RELEASE=latest
 
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-amd64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
