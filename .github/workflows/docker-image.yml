@@ -1,8 +1,6 @@
 name: Build and Push Image
 
 on:
-  schedule:
-    - cron:  '22 2 * * *'
   workflow_dispatch:
   push:
     branches: [ main ]
