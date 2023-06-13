@@ -25,8 +25,9 @@ COPY install-opencl-amd.sh amd-opencl/
 # Install dependencies:
 # mesa-va-drivers: needed for AMD VAAPI. Mesa >= 20.1 is required for HEVC transcoding.
 RUN apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y apt-transport-https binutils ca-certificates curl gnupg wget xz-utils \
- && curl https://repo.jellyfin.org/install-debuntu.sh | bash \
+ && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget apt-transport-https binutils xz-utils \
+ && curl -fsSL https://repo.jellyfin.org/ubuntu/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/debian-jellyfin.gpg \
+ && echo "deb [arch=amd64] https://repo.jellyfin.org/ubuntu lunar main" | tee /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y mesa-va-drivers jellyfin-ffmpeg6 openssl locales libfontconfig1 libfreetype6 \
 # AMD OpenCL Tone mapping dependencies:
@@ -36,7 +37,7 @@ RUN apt-get update \
  && cd .. \
  && rm -rf amd-opencl \
 # Cleanup
- && apt-get remove apt-transport-https binutils curl gnupg wget xz-utils -y \
+ && apt-get remove gnupg wget apt-transport-https xz-utils -y \
  && apt-get clean autoclean -y \
  && apt-get autoremove -y \
  && rm -rf /var/lib/apt/lists/* \
