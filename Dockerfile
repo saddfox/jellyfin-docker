@@ -2,11 +2,11 @@
 # there is no stable/latest upstream tag, have to use specific version
 # supports amd vaapi, opencl only for legacy/orca
 # for intel/nvidia use official jellyfin/jellyfin image
-ARG TARGET_RELEASE=10.8.10
+ARG TARGET_RELEASE=10.8.13
 
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-amd64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
-FROM ubuntu:lunar
+FROM ubuntu:mantic
 
 # Default environment variables for the Jellyfin invocation
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
@@ -27,7 +27,7 @@ COPY install-opencl-amd.sh amd-opencl/
 RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget apt-transport-https binutils xz-utils \
  && curl -fsSL https://repo.jellyfin.org/ubuntu/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/debian-jellyfin.gpg \
- && echo "deb [arch=amd64] https://repo.jellyfin.org/ubuntu lunar main" | tee /etc/apt/sources.list.d/jellyfin.list \
+ && echo "deb [arch=amd64] https://repo.jellyfin.org/ubuntu mantic main" | tee /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y mesa-va-drivers jellyfin-ffmpeg5 openssl locales libfontconfig1 libfreetype6 \
 # AMD OpenCL Tone mapping dependencies:
