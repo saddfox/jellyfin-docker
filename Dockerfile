@@ -45,8 +45,8 @@ RUN apt-get update \
  && chmod 777 ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR} \
  && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
 
-COPY --from=server /jellyfin /jellyfin
-COPY --from=web /jellyfin-web /jellyfin/jellyfin-web
+COPY --from=server --chown=1000:1000 /jellyfin /jellyfin
+COPY --from=web --chown=1000:1000 /jellyfin-web /jellyfin/jellyfin-web
 
 EXPOSE 8096
 VOLUME ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR}
