@@ -1,7 +1,3 @@
-# By default build for unstable, 10.8.0-beta2 doesn't work on ubuntu 22.04
-# there is no stable/latest upstream tag, have to use specific version
-# supports amd vaapi, opencl only for legacy/orca
-# for intel/nvidia use official jellyfin/jellyfin image
 ARG TARGET_RELEASE=10.8.13
 
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-amd64 as server
@@ -20,24 +16,36 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
     JELLYFIN_WEB_DIR="/jellyfin/jellyfin-web" \
     JELLYFIN_FFMPEG="/usr/lib/jellyfin-ffmpeg/ffmpeg"
 
-COPY install-opencl-amd.sh amd-opencl/
+# https://github.com/dlemstra/Magick.NET/issues/707#issuecomment-785351620
+ENV MALLOC_TRIM_THRESHOLD_=131072
+
+# https://github.com/intel/compute-runtime/releases
+ARG GMMLIB_VERSION=22.3.0
+ARG IGC_VERSION=1.0.14828.8
+ARG NEO_VERSION=23.30.26918.9
+ARG LEVEL_ZERO_VERSION=1.3.26918.9
 
 # Install dependencies:
-# mesa-va-drivers: needed for AMD VAAPI. Mesa >= 20.1 is required for HEVC transcoding.
 RUN apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget apt-transport-https binutils xz-utils \
+ && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget apt-transport-https \
  && curl -fsSL https://repo.jellyfin.org/ubuntu/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/debian-jellyfin.gpg \
  && echo "deb [arch=amd64] https://repo.jellyfin.org/ubuntu mantic main" | tee /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y mesa-va-drivers jellyfin-ffmpeg5 openssl locales libfontconfig1 libfreetype6 \
-# AMD OpenCL Tone mapping dependencies:
- && cd amd-opencl \
- && chmod +x install-opencl-amd.sh \
- && ./install-opencl-amd.sh \
+ && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg6 openssl locales libfontconfig1 libfreetype6 \
+# Intel VAAPI Tone mapping dependencies:
+# Prefer NEO to Beignet since the latter one doesn't support Comet Lake or newer for now.
+# Do not use the intel-opencl-icd package from repo since they will not build with RELEASE_WITH_REGKEYS enabled.
+ && mkdir intel-compute-runtime \
+ && cd intel-compute-runtime \
+ && wget https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/libigdgmm12_${GMMLIB_VERSION}_amd64.deb \
+ && wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGC_VERSION}/intel-igc-core_${IGC_VERSION}_amd64.deb \
+ && wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGC_VERSION}/intel-igc-opencl_${IGC_VERSION}_amd64.deb \
+ && wget https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/intel-opencl-icd_${NEO_VERSION}_amd64.deb \
+ && wget https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/intel-level-zero-gpu_${LEVEL_ZERO_VERSION}_amd64.deb \
+ && dpkg -i *.deb \
  && cd .. \
- && rm -rf amd-opencl \
-# Cleanup
- && apt-get remove gnupg wget apt-transport-https xz-utils -y \
+ && rm -rf intel-compute-runtime \
+ && apt-get remove gnupg wget apt-transport-https -y \
  && apt-get clean autoclean -y \
  && apt-get autoremove -y \
  && rm -rf /var/lib/apt/lists/* \
