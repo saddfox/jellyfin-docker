@@ -21,6 +21,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: saddfox/jellyfin-docker:latest
+          tags: saddfox/jellyfin-docker:rocm-opencl
           cache-from: type=gha
           cache-to: type=gha,mode=max
